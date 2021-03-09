@@ -4,8 +4,9 @@ from django.core.validators import validate_comma_separated_integer_list
 
 class City(models.Model):
     city_name = models.CharField(max_length=50)
-    city_number = models.PositiveIntegerField()
+    city_code = models.CharField(max_length=5, blank=True)
     tenant_code = models.CharField(max_length=5, blank=True)
+    billboard_section = models.CharField(max_length=50, blank=True)
 
     def __str__(self):
         return self.city_name
@@ -16,7 +17,7 @@ class City(models.Model):
 
 class Cinema(models.Model):
     cinema_name = models.CharField(max_length=50)
-    cinema_number = models.PositiveIntegerField()
+    cinema_code = models.CharField(max_length=5, blank=True)
 
     def __str__(self):
         return self.cinema_name

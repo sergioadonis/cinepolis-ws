@@ -4,12 +4,12 @@ from . import models
 
 @admin.register(models.Cinema)
 class CinemaAdmin(admin.ModelAdmin):
-    list_display = ['cinema_name', 'cinema_number']
+    list_display = ['cinema_name', 'cinema_code']
 
 
 @admin.register(models.City)
 class CityAdmin(admin.ModelAdmin):
-    list_display = ['city_name', 'city_number', 'tenant_code']
+    list_display = ['city_name', 'city_code', 'tenant_code']
 
 
 class BillboardMovieInline(admin.TabularInline):

@@ -44,12 +44,12 @@ def get_billboard_movies(billboard_request_pk):
 
     try:
         city = billboard_request.city
-        city_number, tenant_id = city.city_number, city.tenant_code
+        city_code, tenant_id, billboard_section_name = city.city_code, city.tenant_code, city.billboard_section
         access_token = generate_access_token()
 
         logger.info(f'access_token {access_token}')
 
-        url = f'https://proxy-mul-exp-browse-production.us-e1.cloudhub.io/v2/exp/browse/cities/{city_number}/billboard?channel=WEB'
+        url = f'https://proxy-mul-exp-browse-production.us-e1.cloudhub.io/v2/exp/browse/cities/{city_code}/billboard?channel=WEB'
         headers = {
             'TenantId': tenant_id,
             'Authorization': 'Bearer ' + access_token
@@ -63,7 +63,7 @@ def get_billboard_movies(billboard_request_pk):
 
         for section in json:
             section_name = section['name']
-            if section_name == "En Cartelera":
+            if section_name == billboard_section_name:
                 movies = section['movies']
                 billboard_movies = []
 
@@ -80,7 +80,7 @@ def get_billboard_movies(billboard_request_pk):
         billboard_request.status = models.RequestStatus.DONE
     except Exception as e:
         billboard_request.status = models.RequestStatus.ERROR
-        billboard.error_message = str(e)
+        billboard_request.error_message = str(e)
         logger.error(e)
 
     billboard_request.save()
