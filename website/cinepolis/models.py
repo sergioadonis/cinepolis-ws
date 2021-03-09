@@ -5,6 +5,7 @@ from django.core.validators import validate_comma_separated_integer_list
 class City(models.Model):
     city_name = models.CharField(max_length=50)
     city_number = models.PositiveIntegerField()
+    tenant_code = models.CharField(max_length=5, blank=True)
 
     def __str__(self):
         return self.city_name
@@ -34,6 +35,7 @@ class BillboardRequest(models.Model):
     status = models.CharField(
         max_length=5, choices=RequestStatus.choices, default=RequestStatus.TO_DO)
     response = models.JSONField(default=list)
+    error_message = models.TextField(blank=True)
     created_on = models.DateTimeField(auto_now_add=True)
     updated_on = models.DateTimeField(auto_now=True)
 

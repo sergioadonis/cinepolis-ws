@@ -9,7 +9,7 @@ class CinemaAdmin(admin.ModelAdmin):
 
 @admin.register(models.City)
 class CityAdmin(admin.ModelAdmin):
-    list_display = ['city_name', 'city_number']
+    list_display = ['city_name', 'city_number', 'tenant_code']
 
 
 class BillboardMovieInline(admin.TabularInline):
@@ -27,4 +27,5 @@ class BillboardMovieInline(admin.TabularInline):
 class BillboardRequestAdmin(admin.ModelAdmin):
     list_display = ['city', 'date', 'status']
     inlines = [BillboardMovieInline]
-    readonly_fields = ['status', 'response']
+    readonly_fields = ['status', 'error_message', 'created_on', 'updated_on']
+    exclude = ['response']

@@ -6,11 +6,20 @@ services:
     env_file: .env
     depends_on:
       - database
+      - broker
     command: bash -c "python manage.py migrate && python manage.py runserver 0.0.0.0:${PORT}"
     ports:
       - 8000:${PORT}
     volumes:
       - ./website:/usr/src
+
+  worker:
+    build: website
+    env_file: .env
+    depends_on:
+      - database
+      - broker
+    command: celery --app ${CELERY_APP} worker -l info
 
   database:
     image: postgres:10
@@ -20,3 +29,8 @@ services:
       - 5432
     volumes:
       - .data:/var/lib/postgresql/data
+
+  broker:
+    image: redis:6.2
+    expose:
+      - 6379
