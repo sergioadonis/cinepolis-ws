@@ -9,6 +9,8 @@ services:
     command: bash -c "python manage.py migrate && python manage.py runserver 0.0.0.0:${PORT}"
     ports:
       - 8000:${PORT}
+    volumes:
+      - ./website:/usr/src
 
   database:
     image: postgres:10
