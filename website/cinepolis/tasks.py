@@ -1,5 +1,5 @@
-
 import logging
+import traceback
 from decouple import config
 import requests
 
@@ -27,10 +27,10 @@ def generate_access_token():
     response = requests.post(url, data=data)
     json = response.json()
     if 'access_token' in json.keys():
-        print('SI')
         return json['access_token']
     else:
-        print(json)
+        logger.debug(json)
+        return None
 
 
 @app.task
@@ -48,6 +48,9 @@ def get_billboard_movies(billboard_request_pk):
         access_token = generate_access_token()
 
         logger.info(f'access_token {access_token}')
+
+        if access_token is None:
+            raise Exception('access_token is None')
 
         url = f'https://proxy-mul-exp-browse-production.us-e1.cloudhub.io/v2/exp/browse/cities/{city_code}/billboard?channel=WEB'
         headers = {
@@ -70,7 +73,7 @@ def get_billboard_movies(billboard_request_pk):
                 for m in movies:
                     bm = models.BillboardMovie(
                         billboard_request=billboard_request,
-                        movie_number=m['id'],
+                        movie_code=m['id'],
                         movie_title=m['title'],
                         cinemas=m['cinemas']
                     )
@@ -82,5 +85,6 @@ def get_billboard_movies(billboard_request_pk):
         billboard_request.status = models.RequestStatus.ERROR
         billboard_request.error_message = str(e)
         logger.error(e)
+        traceback.print_exc()
 
     billboard_request.save()

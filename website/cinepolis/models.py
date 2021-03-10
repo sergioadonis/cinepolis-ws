@@ -47,7 +47,7 @@ class BillboardRequest(models.Model):
 class BillboardMovie(models.Model):
     billboard_request = models.ForeignKey(
         BillboardRequest, on_delete=models.CASCADE)
-    movie_number = models.PositiveIntegerField()
+    movie_code = models.CharField(max_length=5, blank=True)
     movie_title = models.CharField(max_length=50)
     cinemas = models.CharField(max_length=50,
                                validators=[
