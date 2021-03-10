@@ -1,3 +1,4 @@
+from django.utils import timezone
 from django.db import models
 from django.core.validators import validate_comma_separated_integer_list
 
@@ -32,7 +33,7 @@ class RequestStatus(models.TextChoices):
 
 class BillboardRequest(models.Model):
     city = models.ForeignKey(City, on_delete=models.CASCADE)
-    date = models.DateField()
+    date_time = models.DateTimeField(default=timezone.now)
     status = models.CharField(
         max_length=5, choices=RequestStatus.choices, default=RequestStatus.TO_DO)
     response = models.JSONField(default=list)
@@ -41,7 +42,7 @@ class BillboardRequest(models.Model):
     updated_on = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f'{self.date} - {self.city}'
+        return f'{self.date_time} - {self.city}'
 
 
 class BillboardMovie(models.Model):

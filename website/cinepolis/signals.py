@@ -12,4 +12,6 @@ logger = logging.getLogger(__name__)
 def billboard_request_post_save(sender, instance, **kwargs):
     logger.info(f'billboard_request_post_save signal with {instance.pk} pk')
     if instance.status == models.RequestStatus.TO_DO:
-        tasks.get_billboard_movies.delay(billboard_request_pk=instance.pk)
+        eta = instance.date_time
+        params = (instance.pk,)
+        tasks.get_billboard_movies.apply_async(params, eta=eta)

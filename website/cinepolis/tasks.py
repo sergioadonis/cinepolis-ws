@@ -25,6 +25,9 @@ def generate_access_token():
     }
 
     response = requests.post(url, data=data)
+    if response.status_code != 200:
+        raise Exception(response.raw)
+
     json = response.json()
     if 'access_token' in json.keys():
         return json['access_token']
