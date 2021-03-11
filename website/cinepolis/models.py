@@ -31,7 +31,7 @@ class RequestStatus(models.TextChoices):
     ERROR = 'ERROR'
 
 
-class BillboardRequest(models.Model):
+class Billboard(models.Model):
     city = models.ForeignKey(City, on_delete=models.CASCADE)
     date_time = models.DateTimeField(default=timezone.now)
     status = models.CharField(
@@ -42,18 +42,45 @@ class BillboardRequest(models.Model):
     updated_on = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f'{self.date_time} - {self.city}'
+        from django.utils.timezone import template_localtime, localdate
+        return f'{localdate(self.date_time)} - {self.city}'
 
 
 class BillboardMovie(models.Model):
-    billboard_request = models.ForeignKey(
-        BillboardRequest, on_delete=models.CASCADE)
+    billboard = models.ForeignKey(
+        Billboard, on_delete=models.CASCADE)
     movie_code = models.CharField(max_length=5, blank=True)
-    movie_title = models.CharField(max_length=50)
+    movie_title = models.CharField(max_length=50, blank=True)
     cinemas = models.CharField(max_length=50,
                                validators=[
                                    validate_comma_separated_integer_list],
-                               default='')
+                               default='',
+                               blank=True)
+    filter_date_time = models.DateTimeField(default=timezone.now)
+    status = models.CharField(
+        max_length=5, choices=RequestStatus.choices, default=RequestStatus.TO_DO)
+    response = models.JSONField(default=list)
+    error_message = models.TextField(blank=True)
+    created_on = models.DateTimeField(auto_now_add=True)
+    updated_on = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.movie_title
+        return f'{self.movie_title} - {self.billboard}'
+
+    class Meta:
+        verbose_name = 'Movie'
+        verbose_name_plural = 'Movies'
+
+
+class MovieShowtime(models.Model):
+    billboard_movie = models.ForeignKey(
+        BillboardMovie, on_delete=models.CASCADE)
+    cinema_code = models.CharField(max_length=5, blank=True)
+    cinema_name = models.CharField(max_length=50, blank=True)
+    session_code = models.CharField(max_length=10, blank=True)
+    showtime = models.DateTimeField()
+    screen_number = models.CharField(max_length=5, blank=True)
+    screen_name = models.CharField(max_length=50, blank=True)
+
+    def __str__(self):
+        return f'{self.showtime} - {self.screen_name}'

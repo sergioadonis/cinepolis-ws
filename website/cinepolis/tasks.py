@@ -37,35 +37,41 @@ def generate_access_token():
 
 
 @app.task
-def get_billboard_movies(billboard_request_pk):
-    logger.info(f'get_billboard_movies task with {billboard_request_pk} pk')
+def generate_billboard_movies(billboard_pk):
+    logger.info(
+        f'generate_billboard_movies task with billboard_pk: {billboard_pk}')
 
-    billboard_request = models.BillboardRequest.objects.get(
-        pk=billboard_request_pk)
-    billboard_request.status = models.RequestStatus.DOING
-    billboard_request.save()
+    billboard = models.Billboard.objects.get(
+        pk=billboard_pk)
+
+    if billboard.status != models.RequestStatus.TO_DO:
+        return
+
+    billboard.status = models.RequestStatus.DOING
+    billboard.save()
 
     try:
-        city = billboard_request.city
-        city_code, tenant_id, billboard_section_name = city.city_code, city.tenant_code, city.billboard_section
         access_token = generate_access_token()
-
         logger.info(f'access_token {access_token}')
-
         if access_token is None:
             raise Exception('access_token is None')
 
-        url = f'https://proxy-mul-exp-browse-production.us-e1.cloudhub.io/v2/exp/browse/cities/{city_code}/billboard?channel=WEB'
+        city = billboard.city
+        cityId, tenantId, billboard_section_name = city.city_code, city.tenant_code, city.billboard_section
+
+        url = f'https://proxy-mul-exp-browse-production.us-e1.cloudhub.io/v2/exp/browse/cities/{cityId}/billboard?channel=WEB'
+        logger.info('url: ' + url)
+
         headers = {
-            'TenantId': tenant_id,
+            'TenantId': tenantId,
             'Authorization': 'Bearer ' + access_token
         }
 
         response = requests.get(url, headers=headers)
         json = response.json()
 
-        billboard_request.response = json
-        billboard_request.save()
+        billboard.response = json
+        billboard.save()
 
         for section in json:
             section_name = section['name']
@@ -74,20 +80,118 @@ def get_billboard_movies(billboard_request_pk):
                 billboard_movies = []
 
                 for m in movies:
+                    cinemas = ','.join(str(cinema) for cinema in m['cinemas'])
                     bm = models.BillboardMovie(
-                        billboard_request=billboard_request,
+                        billboard=billboard,
                         movie_code=m['id'],
                         movie_title=m['title'],
-                        cinemas=m['cinemas']
+                        cinemas=cinemas,
+                        filter_date_time=billboard.date_time
                     )
                     billboard_movies.append(bm)
+                    bm.save()
 
-                models.BillboardMovie.objects.bulk_create(billboard_movies)
-        billboard_request.status = models.RequestStatus.DONE
+                # models.BillboardMovie.objects.bulk_create(billboard_movies)
+        billboard.status = models.RequestStatus.DONE
     except Exception as e:
-        billboard_request.status = models.RequestStatus.ERROR
-        billboard_request.error_message = str(e)
+        billboard.status = models.RequestStatus.ERROR
+        billboard.error_message = str(e)
         logger.error(e)
         traceback.print_exc()
 
-    billboard_request.save()
+    billboard.save()
+    return
+
+
+@app.task
+def generate_movie_showtimes(billboard_movie_pk):
+    logger.info(
+        f'generate_movie_showtimes task with billboard_movie_pk: {billboard_movie_pk}')
+
+    billboard_movie = models.BillboardMovie.objects.get(
+        pk=billboard_movie_pk)
+
+    if billboard_movie.status != models.RequestStatus.TO_DO:
+        return
+
+    billboard_movie.status = models.RequestStatus.DOING
+    billboard_movie.save()
+
+    try:
+        access_token = generate_access_token()
+        logger.info(f'access_token {access_token}')
+        if access_token is None:
+            raise Exception('access_token is None')
+
+        dt = billboard_movie.filter_date_time
+        # import json
+        # from django.core.serializers.json import DjangoJSONEncoder
+        # filter_date = json.dumps(date_time, cls=DjangoJSONEncoder)
+        # filter_date = f'{dt.year}-{dt.month}-{dt.day}T{dt.hour}:{dt.minute}:{dt.second}'
+        from django.utils import timezone
+        filterDate = dt.astimezone(
+            timezone.get_current_timezone()).strftime("%Y-%m-%dT%H:%M:%S")
+        movieId, cinemaId = billboard_movie.movie_code, billboard_movie.cinemas
+
+        url = f'https://proxy-mul-exp-browse-production.us-e1.cloudhub.io/v1/exp/browse/cinemas/showtimes?channel=WEB&movieId={movieId}&cinemaId={cinemaId}&filterDate={filterDate}'
+        logger.info('url: ' + url)
+
+        tenantId = billboard_movie.billboard.city.tenant_code
+
+        headers = {
+            'TenantId': tenantId,
+            'Authorization': 'Bearer ' + access_token
+        }
+
+        response = requests.get(url, headers=headers)
+        json = response.json()
+
+        billboard_movie.response = json
+        billboard_movie.save()
+
+        cinemas = list(models.Cinema.objects.all().values(
+            'cinema_name', 'cinema_code'))
+
+        for c in json:
+            for m in c['movies']:
+                for v in m['versions']:
+                    movie_showtimes = []
+                    for s in v['showtimes']:
+                        import datetime
+                        showtime = datetime.datetime.strptime(
+                            s['showtime'], "%Y-%m-%dT%H:%M:%S")
+                        showtime = timezone.make_aware(
+                            showtime, timezone=timezone.get_current_timezone())
+
+                        cinema_code = c['cinemaId']
+                        cinema_name = ''
+                        logger.info(cinemas)
+                        filtered_cinemas = list(filter(
+                            lambda x: x['cinema_code'] == str(cinema_code), cinemas))
+                        logger.info(filtered_cinemas)
+                        if len(filtered_cinemas) > 0:
+                            cinema_name = filtered_cinemas[0]['cinema_name']
+
+                        ms = models.MovieShowtime(
+                            billboard_movie=billboard_movie,
+                            cinema_code=cinema_code,
+                            cinema_name=cinema_name,
+                            session_code=s['sessionId'],
+                            showtime=showtime,
+                            screen_number=s['screenNumber'],
+                            screen_name=s['screenName']
+                        )
+                        movie_showtimes.append(ms)
+                        ms.save()
+
+                    # models.MovieShowtime.objects.bulk_create(movie_showtimes)
+
+        billboard_movie.status = models.RequestStatus.DONE
+    except Exception as e:
+        billboard_movie.status = models.RequestStatus.ERROR
+        billboard_movie.error_message = str(e)
+        logger.error(e)
+        traceback.print_exc()
+
+    billboard_movie.save()
+    return

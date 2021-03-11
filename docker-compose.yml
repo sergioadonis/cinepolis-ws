@@ -23,7 +23,7 @@ services:
 
   database:
     image: postgres:10
-    #restart: always
+    restart: always
     env_file: .env
     expose:
       - 5432
@@ -32,5 +32,6 @@ services:
 
   broker:
     image: redis:6.2
+    restart: always
     expose:
       - 6379
