@@ -44,10 +44,10 @@ def generate_billboard_movies(billboard_pk):
     billboard = models.Billboard.objects.get(
         pk=billboard_pk)
 
-    if billboard.status != models.RequestStatus.TO_DO:
+    if billboard.request_status != models.RequestStatus.TO_DO:
         return
 
-    billboard.status = models.RequestStatus.DOING
+    billboard.request_status = models.RequestStatus.DOING
     billboard.save()
 
     try:
@@ -55,6 +55,9 @@ def generate_billboard_movies(billboard_pk):
         logger.info(f'access_token {access_token}')
         if access_token is None:
             raise Exception('access_token is None')
+
+        billboard.access_token = access_token
+        billboard.save()
 
         city = billboard.city
         cityId, tenantId, billboard_section_name = city.city_code, city.tenant_code, city.billboard_section
@@ -92,9 +95,9 @@ def generate_billboard_movies(billboard_pk):
                     bm.save()
 
                 # models.BillboardMovie.objects.bulk_create(billboard_movies)
-        billboard.status = models.RequestStatus.DONE
+        billboard.request_status = models.RequestStatus.DONE
     except Exception as e:
-        billboard.status = models.RequestStatus.ERROR
+        billboard.request_status = models.RequestStatus.ERROR
         billboard.error_message = str(e)
         logger.error(e)
         traceback.print_exc()
@@ -111,14 +114,14 @@ def generate_movie_showtimes(billboard_movie_pk):
     billboard_movie = models.BillboardMovie.objects.get(
         pk=billboard_movie_pk)
 
-    if billboard_movie.status != models.RequestStatus.TO_DO:
+    if billboard_movie.request_status != models.RequestStatus.TO_DO:
         return
 
-    billboard_movie.status = models.RequestStatus.DOING
+    billboard_movie.request_status = models.RequestStatus.DOING
     billboard_movie.save()
 
     try:
-        access_token = generate_access_token()
+        access_token = billboard_movie.billboard.access_token
         logger.info(f'access_token {access_token}')
         if access_token is None:
             raise Exception('access_token is None')
@@ -186,12 +189,94 @@ def generate_movie_showtimes(billboard_movie_pk):
 
                     # models.MovieShowtime.objects.bulk_create(movie_showtimes)
 
-        billboard_movie.status = models.RequestStatus.DONE
+        billboard_movie.request_status = models.RequestStatus.DONE
     except Exception as e:
-        billboard_movie.status = models.RequestStatus.ERROR
+        billboard_movie.request_status = models.RequestStatus.ERROR
         billboard_movie.error_message = str(e)
         logger.error(e)
         traceback.print_exc()
 
     billboard_movie.save()
+    return
+
+
+@app.task
+def generate_movie_showtime_seats(movie_showtime_pk):
+    logger.info(
+        f'generate_movie_showtime_seats task with movie_showtime_pk: {movie_showtime_pk}')
+
+    movie_showtime = models.MovieShowtime.objects.get(
+        pk=movie_showtime_pk)
+
+    if movie_showtime.request_status != models.RequestStatus.TO_DO:
+        return
+
+    movie_showtime.request_status = models.RequestStatus.DOING
+    movie_showtime.save()
+
+    try:
+        access_token = movie_showtime.billboard_movie.billboard.access_token
+        logger.info(f'access_token {access_token}')
+        if access_token is None:
+            raise Exception('access_token is None')
+
+        cinemaId, sessionId = movie_showtime.cinema_code, movie_showtime.session_code
+
+        url = f'https://proxy-mul-exp-browse-production.us-e1.cloudhub.io/v2/exp/browse/cinemas/{cinemaId}/sessions/{sessionId}/seats?channel=WEB'
+        logger.info('url: ' + url)
+
+        tenantId = movie_showtime.billboard_movie.billboard.city.tenant_code
+
+        headers = {
+            'TenantId': tenantId,
+            'Authorization': 'Bearer ' + access_token
+        }
+
+        response = requests.get(url, headers=headers)
+        json = response.json()
+
+        movie_showtime.response = json
+        movie_showtime.save()
+
+        showtime_seat_status = {}
+
+        for a in json['seatLayoutData']['areas']:
+            for r in a['rows']:
+                for s in r['seats']:
+                    status_code = str(s['status'])
+
+                    showtime_seat_status[status_code] = showtime_seat_status.get(
+                        status_code, 0) + 1
+
+                    # showtime_seats.append({
+                    #     'status_code': status_code,
+                    #     'status_name': status_name
+                    # })
+
+        seat_status = list(models.SeatStatus.objects.all().values(
+            'status_name', 'status_code'))
+
+        movie_showtime_seat_status = []
+
+        for (status_code, seat_count) in showtime_seat_status.items():
+            status_name = ''
+            filtered_status = list(
+                filter(lambda x: x['status_code'] == status_code, seat_status))
+            if len(filtered_status) > 0:
+                status_name = filtered_status[0]['status_name']
+
+            msss = models.MovieShowtimeSeatStatus(movie_showtime=movie_showtime,
+                                                  status_code=status_code, status_name=status_name, seat_count=seat_count)
+            movie_showtime_seat_status.append(msss)
+            msss.save()
+
+        # models.MovieShowtimeSeatStatus.objects.bulk_create(movie_showtime_seat_status)
+        movie_showtime.request_status = models.RequestStatus.DONE
+    except Exception as e:
+        movie_showtime.request_status = models.RequestStatus.ERROR
+        movie_showtime.error_message = str(e)
+        logger.error(e)
+        traceback.print_exc()
+
+    movie_showtime.save()
     return

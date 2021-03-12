@@ -1,6 +1,7 @@
-from django.utils import timezone
 from django.db import models
 from django.core.validators import validate_comma_separated_integer_list
+from django.utils import timezone
+from django.utils.timezone import template_localtime, localdate
 
 
 class City(models.Model):
@@ -34,15 +35,15 @@ class RequestStatus(models.TextChoices):
 class Billboard(models.Model):
     city = models.ForeignKey(City, on_delete=models.CASCADE)
     date_time = models.DateTimeField(default=timezone.now)
-    status = models.CharField(
+    request_status = models.CharField(
         max_length=5, choices=RequestStatus.choices, default=RequestStatus.TO_DO)
     response = models.JSONField(default=list)
+    access_token = models.TextField(blank=True)
     error_message = models.TextField(blank=True)
     created_on = models.DateTimeField(auto_now_add=True)
     updated_on = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        from django.utils.timezone import template_localtime, localdate
         return f'{localdate(self.date_time)} - {self.city}'
 
 
@@ -57,7 +58,7 @@ class BillboardMovie(models.Model):
                                default='',
                                blank=True)
     filter_date_time = models.DateTimeField(default=timezone.now)
-    status = models.CharField(
+    request_status = models.CharField(
         max_length=5, choices=RequestStatus.choices, default=RequestStatus.TO_DO)
     response = models.JSONField(default=list)
     error_message = models.TextField(blank=True)
@@ -65,7 +66,7 @@ class BillboardMovie(models.Model):
     updated_on = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f'{self.movie_title} - {self.billboard}'
+        return f'{self.movie_title} - {localdate(self.filter_date_time)} {self.billboard.city}'
 
     class Meta:
         verbose_name = 'Movie'
@@ -81,6 +82,33 @@ class MovieShowtime(models.Model):
     showtime = models.DateTimeField()
     screen_number = models.CharField(max_length=5, blank=True)
     screen_name = models.CharField(max_length=50, blank=True)
+    request_status = models.CharField(
+        max_length=5, choices=RequestStatus.choices, default=RequestStatus.TO_DO)
+    response = models.JSONField(default=dict)
+    error_message = models.TextField(blank=True)
+    created_on = models.DateTimeField(auto_now_add=True)
+    updated_on = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f'{self.showtime} - {self.screen_name}'
+
+
+class SeatStatus(models.Model):
+    status_code = models.CharField(max_length=5)
+    status_name = models.CharField(max_length=20)
+
+    def __str__(self):
+        return self.status_name
+
+    class Meta:
+        verbose_name_plural = 'Seat Statuses'
+
+
+class MovieShowtimeSeatStatus(models.Model):
+    movie_showtime = models.ForeignKey(MovieShowtime, on_delete=models.CASCADE)
+    status_code = models.CharField(max_length=5, blank=True)
+    status_name = models.CharField(max_length=20, blank=True)
+    seat_count = models.IntegerField(default=0)
+
+    def __str__(self):
+        return f'{self.status_name} - {self.movie_showtime}'
