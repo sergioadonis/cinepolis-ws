@@ -128,3 +128,11 @@ MIDDLEWARE = ['whitenoise.middleware.WhiteNoiseMiddleware', ] + MIDDLEWARE
 # Celery settings
 CELERY_BROKER_URL = config('REDIS_URL', default='redis://localhost:6379')
 # CELERY_RESULT_BACKEND = 'django-db'
+
+# django-sql-explorer
+INSTALLED_APPS = INSTALLED_APPS + ['explorer']
+# cambiar a readonly en prod
+# EXPLORER_CONNECTIONS = { 'Default': 'readonly' }
+# EXPLORER_DEFAULT_CONNECTION = 'readonly'
+EXPLORER_CONNECTIONS = {'Default': 'default'}
+EXPLORER_DEFAULT_CONNECTION = 'default'

@@ -36,6 +36,9 @@ class BillboardAdmin(admin.ModelAdmin):
     inlines = [BillboardMovieInline]
     readonly_fields = ['request_status', 'created_on', 'updated_on']
     exclude = ['access_token', 'error_message', 'response']
+    list_filter = ['request_status', 'city']
+    ordering = ['-date_time']
+    date_hierarchy = 'date_time'
 
     def get_readonly_fields(self, request, obj=None):
         if not obj is None:
@@ -46,7 +49,8 @@ class BillboardAdmin(admin.ModelAdmin):
 
             if request.user.is_superuser:
                 for f in self.list_display:
-                    readonly_fields.remove(f)
+                    if f in readonly_fields:
+                        readonly_fields.remove(f)
 
             return readonly_fields
         return self.readonly_fields
@@ -72,6 +76,9 @@ class BillboardMovieAdmin(admin.ModelAdmin):
     inlines = [MovieShowtimeInline]
     readonly_fields = ['request_status', 'created_on', 'updated_on']
     exclude = ['error_message', 'response']
+    list_filter = ['request_status', 'billboard__city']
+    ordering = ['-billboard']
+    search_fields = ['movie_title']
 
     def get_readonly_fields(self, request, obj=None):
         if not obj is None:
@@ -82,7 +89,8 @@ class BillboardMovieAdmin(admin.ModelAdmin):
 
             if request.user.is_superuser:
                 for f in self.list_display:
-                    readonly_fields.remove(f)
+                    if f in readonly_fields:
+                        readonly_fields.remove(f)
                 readonly_fields.remove('filter_date_time')
                 readonly_fields.remove('cinemas')
                 readonly_fields.remove('movie_code')
@@ -117,6 +125,10 @@ class MovieShowtimeAdmin(admin.ModelAdmin):
     inlines = [MovieShowtimeSeatStatusInline]
     readonly_fields = ['request_status', 'created_on', 'updated_on']
     exclude = ['error_message', 'response']
+    list_filter = ['request_status', 'billboard_movie']
+    ordering = ['-showtime']
+    date_hierarchy = 'showtime'
+    search_fields = ['session_code', 'billboard_movie__movie_title']
 
     def get_readonly_fields(self, request, obj=None):
         if not obj is None:
@@ -127,7 +139,8 @@ class MovieShowtimeAdmin(admin.ModelAdmin):
 
             if request.user.is_superuser:
                 for f in self.list_display:
-                    readonly_fields.remove(f)
+                    if f in readonly_fields:
+                        readonly_fields.remove(f)
                 readonly_fields.remove('screen_number')
                 readonly_fields.remove('screen_name')
                 readonly_fields.remove('cinema_code')
