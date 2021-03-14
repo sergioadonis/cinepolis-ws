@@ -79,6 +79,7 @@ class BillboardMovieAdmin(admin.ModelAdmin):
     list_filter = ['request_status', 'billboard__city']
     ordering = ['-billboard']
     search_fields = ['movie_title']
+    date_hierarchy = 'filter_date_time'
 
     def get_readonly_fields(self, request, obj=None):
         if not obj is None:
