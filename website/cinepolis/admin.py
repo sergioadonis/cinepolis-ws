@@ -91,9 +91,9 @@ class BillboardMovieAdmin(admin.ModelAdmin):
                 for f in self.list_display:
                     if f in readonly_fields:
                         readonly_fields.remove(f)
-                readonly_fields.remove('filter_date_time')
-                readonly_fields.remove('cinemas')
-                readonly_fields.remove('movie_code')
+                # readonly_fields.remove('filter_date_time')
+                # readonly_fields.remove('cinemas')
+                # readonly_fields.remove('movie_code')
 
             return readonly_fields
         return self.readonly_fields
@@ -133,7 +133,7 @@ class MovieShowtimeAdmin(admin.ModelAdmin):
     def get_readonly_fields(self, request, obj=None):
         if not obj is None:
             readonly_fields = ['billboard_movie', 'session_code', 'showtime', 'screen_number',
-                               'screen_name', 'cinema_code', 'cinema_name'] + self.readonly_fields
+                               'screen_name', 'cinema_code', 'cinema_name', 'version_details'] + self.readonly_fields
             if obj.request_status == models.RequestStatus.ERROR:
                 readonly_fields = readonly_fields + self.exclude
 
@@ -141,10 +141,10 @@ class MovieShowtimeAdmin(admin.ModelAdmin):
                 for f in self.list_display:
                     if f in readonly_fields:
                         readonly_fields.remove(f)
-                readonly_fields.remove('screen_number')
-                readonly_fields.remove('screen_name')
-                readonly_fields.remove('cinema_code')
-                readonly_fields.remove('cinema_name')
+                # readonly_fields.remove('screen_number')
+                # readonly_fields.remove('screen_name')
+                # readonly_fields.remove('cinema_code')
+                # readonly_fields.remove('cinema_name')
 
             return readonly_fields
         return self.readonly_fields

@@ -82,6 +82,7 @@ class MovieShowtime(models.Model):
     showtime = models.DateTimeField()
     screen_number = models.CharField(max_length=5, blank=True)
     screen_name = models.CharField(max_length=50, blank=True)
+    version_details = models.CharField(max_length=50, default='', blank=True)
     request_status = models.CharField(
         max_length=5, choices=RequestStatus.choices, default=RequestStatus.TO_DO)
     response = models.JSONField(default=dict)

@@ -158,6 +158,8 @@ def generate_movie_showtimes(billboard_movie_pk):
         for c in json:
             for m in c['movies']:
                 for v in m['versions']:
+                    version_details = ' '.join(
+                        (v['experience'], v['language'], v['format'],))
                     movie_showtimes = []
                     for s in v['showtimes']:
                         import datetime
@@ -182,7 +184,8 @@ def generate_movie_showtimes(billboard_movie_pk):
                             session_code=s['sessionId'],
                             showtime=showtime,
                             screen_number=s['screenNumber'],
-                            screen_name=s['screenName']
+                            screen_name=s['screenName'],
+                            version_details=version_details
                         )
                         movie_showtimes.append(ms)
                         ms.save()
