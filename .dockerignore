@@ -1,9 +1,10 @@
-.data/
-.venv/
-.vscode/
-.env
 __pycache__/
 *.pyc
-staticfiles/
 .backup/
+.data/
+.data
+.env
 .git/
+staticfiles/
+.venv/
+.vscode/

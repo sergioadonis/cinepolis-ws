@@ -30,7 +30,7 @@ services:
     ports: 
       - 5432:5432
     volumes:
-      - .data:/var/lib/postgresql/data
+      - ~/.data:/var/lib/postgresql/data
 
   broker:
     image: redis:6.2
