@@ -105,15 +105,20 @@ def generate_billboard_movies(billboard_pk):
                     for m in movies:
                         cinemas = ','.join(str(cinema)
                                            for cinema in m['cinemas'])
-                        bm = models.BillboardMovie(
-                            billboard=billboard,
-                            movie_code=m['id'],
-                            movie_title=m['title'],
-                            cinemas=cinemas,
-                            filter_date_time=billboard.date_time
-                        )
-                        billboard_movies.append(bm)
-                        bm.save()
+
+                        exists = models.BillboardMovie.objects.filter(
+                            billboard=billboard, movie_code=m['id']).exists()
+
+                        if not exists:
+                            bm = models.BillboardMovie(
+                                billboard=billboard,
+                                movie_code=m['id'],
+                                movie_title=m['title'],
+                                cinemas=cinemas,
+                                filter_date_time=billboard.date_time
+                            )
+                            billboard_movies.append(bm)
+                            bm.save()
 
                     # models.BillboardMovie.objects.bulk_create(billboard_movies)
 
@@ -207,18 +212,22 @@ def generate_movie_showtimes(billboard_movie_pk):
                             if len(filtered_cinemas) > 0:
                                 cinema_name = filtered_cinemas[0]['cinema_name']
 
-                            ms = models.MovieShowtime(
-                                billboard_movie=billboard_movie,
-                                cinema_code=cinema_code,
-                                cinema_name=cinema_name,
-                                session_code=s['sessionId'],
-                                showtime=showtime,
-                                screen_number=s['screenNumber'],
-                                screen_name=s['screenName'],
-                                version_details=version_details
-                            )
-                            movie_showtimes.append(ms)
-                            ms.save()
+                            exists = models.MovieShowtime.objects.filter(
+                                billboard_movie=billboard_movie, session_code=s['sessionId']).exists()
+
+                            if not exists:
+                                ms = models.MovieShowtime(
+                                    billboard_movie=billboard_movie,
+                                    cinema_code=cinema_code,
+                                    cinema_name=cinema_name,
+                                    session_code=s['sessionId'],
+                                    showtime=showtime,
+                                    screen_number=s['screenNumber'],
+                                    screen_name=s['screenName'],
+                                    version_details=version_details
+                                )
+                                movie_showtimes.append(ms)
+                                ms.save()
 
                         # models.MovieShowtime.objects.bulk_create(movie_showtimes)
 
@@ -306,10 +315,14 @@ def generate_movie_showtime_seats(movie_showtime_pk):
                 if len(filtered_status) > 0:
                     status_name = filtered_status[0]['status_name']
 
-                msss = models.MovieShowtimeSeatStatus(movie_showtime=movie_showtime,
-                                                      status_code=status_code, status_name=status_name, seat_count=seat_count)
-                movie_showtime_seat_status.append(msss)
-                msss.save()
+                exists = models.MovieShowtimeSeatStatus.objects.filter(
+                    movie_showtime=movie_showtime, status_code=status_code).exists()
+
+                if not exists:
+                    msss = models.MovieShowtimeSeatStatus(movie_showtime=movie_showtime,
+                                                          status_code=status_code, status_name=status_name, seat_count=seat_count)
+                    movie_showtime_seat_status.append(msss)
+                    msss.save()
 
             # models.MovieShowtimeSeatStatus.objects.bulk_create(movie_showtime_seat_status)
             movie_showtime.request_status = models.RequestStatus.DONE
