@@ -3,7 +3,7 @@ import traceback
 from decouple import config
 import requests
 
-from website.celery import app
+from config.celery import app
 from . import models
 
 logger = logging.getLogger(__name__)
