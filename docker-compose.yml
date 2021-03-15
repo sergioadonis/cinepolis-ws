@@ -7,11 +7,11 @@ services:
     depends_on:
       - database
       - broker
-    command: bash -c "python manage.py migrate && python manage.py runserver 0.0.0.0:${PORT}"
+    command: bash -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
     ports:
-      - 8000:${PORT}
-    volumes:
-      - .:/usr/src
+      - 8000:8000
+    # volumes:
+    #   - .:/usr/src
 
   worker:
     build: .
@@ -27,6 +27,8 @@ services:
     env_file: .env
     expose:
       - 5432
+    ports: 
+      - 5432:5432
     volumes:
       - .data:/var/lib/postgresql/data
 
