@@ -6,7 +6,7 @@ from decouple import config
 from celery import Celery
 
 # set the default Django settings module for the 'celery' program.
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'website.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 
 celery_app = config('CELERY_APP', default='celeryapp')
 app = Celery(celery_app)

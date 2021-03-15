@@ -2,7 +2,7 @@ version: "3"
 
 services:
   website:
-    build: website
+    build: .
     env_file: .env
     depends_on:
       - database
@@ -11,10 +11,10 @@ services:
     ports:
       - 8000:${PORT}
     volumes:
-      - ./website:/usr/src
+      - .:/usr/src
 
   worker:
-    build: website
+    build: .
     env_file: .env
     depends_on:
       - database
