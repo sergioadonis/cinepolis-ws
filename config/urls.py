@@ -16,9 +16,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import TemplateView
+from cinepolis.views import data_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('explorer/', include('explorer.urls')),
-    path('', TemplateView.as_view(template_name='index.html'))
+    path('', TemplateView.as_view(template_name='index.html')),
+    path('data/', data_view),
 ]
