@@ -106,13 +106,15 @@ def generate_billboard_movies(billboard_pk):
                         cinemas = ','.join(str(cinema)
                                            for cinema in m['cinemas'])
 
+                        movie_code = str(m['id'])
+
                         exists = models.BillboardMovie.objects.filter(
-                            billboard=billboard, movie_code=m['id']).exists()
+                            billboard=billboard, movie_code=movie_code).exists()
 
                         if not exists:
                             bm = models.BillboardMovie(
                                 billboard=billboard,
-                                movie_code=m['id'],
+                                movie_code=movie_code,
                                 movie_title=m['title'],
                                 cinemas=cinemas,
                                 filter_date_time=billboard.date_time
@@ -212,15 +214,17 @@ def generate_movie_showtimes(billboard_movie_pk):
                             if len(filtered_cinemas) > 0:
                                 cinema_name = filtered_cinemas[0]['cinema_name']
 
+                            session_code = str(s['sessionId'])
+
                             exists = models.MovieShowtime.objects.filter(
-                                billboard_movie=billboard_movie, session_code=s['sessionId']).exists()
+                                billboard_movie=billboard_movie, session_code=session_code).exists()
 
                             if not exists:
                                 ms = models.MovieShowtime(
                                     billboard_movie=billboard_movie,
                                     cinema_code=cinema_code,
                                     cinema_name=cinema_name,
-                                    session_code=s['sessionId'],
+                                    session_code=session_code,
                                     showtime=showtime,
                                     screen_number=s['screenNumber'],
                                     screen_name=s['screenName'],
