@@ -57,6 +57,9 @@ def generate_billboard_movies(billboard_pk):
     billboard = models.Billboard.objects.get(
         pk=billboard_pk)
 
+    if not billboard:
+        return
+
     if billboard.request_status != models.RequestStatus.TO_DO:
         return
 
@@ -143,6 +146,9 @@ def generate_movie_showtimes(billboard_movie_pk):
 
     billboard_movie = models.BillboardMovie.objects.get(
         pk=billboard_movie_pk)
+
+    if not billboard_movie:
+        return
 
     if billboard_movie.request_status != models.RequestStatus.TO_DO:
         return
@@ -254,6 +260,9 @@ def generate_movie_showtime_seats(movie_showtime_pk):
 
     movie_showtime = models.MovieShowtime.objects.get(
         pk=movie_showtime_pk)
+
+    if not movie_showtime:
+        return
 
     if movie_showtime.request_status != models.RequestStatus.TO_DO:
         return
