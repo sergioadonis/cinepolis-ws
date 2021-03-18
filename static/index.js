@@ -16,24 +16,30 @@ $(document).ready(function () {
   // });
 
   var url = "get-pivots";
-  $.get(url).then(function (data) {
-    var html = "";
-    for (const pivot of data) {
-      html += `
-        <div>
-          <h4>${pivot.title}</h4>
-          <p>${pivot.description}</p>
-          <p><a href="admin/pivots/pivot/${pivot.id}/change">Admin edit</a> | <a href="explorer/${pivot.query_id}">Explorer edit</a></p>
-          <div id="${pivot.id}"></div>
-        </div>
-      `;
-    }
+  $.get(url)
+    .done(function (data) {
+      console.log(data);
+      var html = "";
+      for (const pivot of data) {
+        html += `
+      <div class="my-5">
+        <h4>${pivot.title}</h4>
+        <p>${pivot.description}</p>
+        <p><a href="admin/pivots/pivot/${pivot.id}/change">Admin edit</a> | <a href="explorer/${pivot.query_id}">Explorer edit</a></p>
+        <div id="${pivot.id}"></div>
+      </div>
+    `;
+      }
 
-    $("#pivots").html(html);
+      $("#pivots").html(html);
 
-    for (const pivot of data) {
-      console.log(pivot.options);
-      $(`#${pivot.id}`).pivot(pivot.query_result, pivot.options);
-    }
-  });
+      for (const pivot of data) {
+        console.log(pivot.options);
+        var options = { ...pivot.options, showUI: false };
+        $(`#${pivot.id}`).pivotUI(pivot.query_result, options);
+      }
+    })
+    .always(function () {
+      $("#loading").hide();
+    });
 });
