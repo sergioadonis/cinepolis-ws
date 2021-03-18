@@ -7,7 +7,7 @@ from . import models
 
 
 def get_pivots(request):
-    pivots = models.Pivot.objects.filter(is_active=True)
+    pivots = models.Pivot.objects.filter(is_active=True).order_by('order')
     data = []
     for p in pivots:
         query = p.query
@@ -22,7 +22,7 @@ def get_pivots(request):
             ]
 
             data.append({
-                'id': p.id,
+                'id': str(p),
                 'title': query.title,
                 'description': query.description,
                 'query_result': query_result,
