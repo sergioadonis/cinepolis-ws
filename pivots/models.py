@@ -10,6 +10,6 @@ class Pivot(models.Model):
     order = models.PositiveIntegerField(default=0)
 
     def __str__(self):
-        if len(self.title):
+        if len(self.title) == 0:
             return self.query.title
         return self.title

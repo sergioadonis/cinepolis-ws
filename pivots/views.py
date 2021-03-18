@@ -22,8 +22,8 @@ def get_pivots(request):
             ]
 
             data.append({
-                'id': str(p),
-                'title': query.title,
+                'id': p.id,
+                'title': str(p),
                 'description': query.description,
                 'query_result': query_result,
                 'query_id': query.id,
