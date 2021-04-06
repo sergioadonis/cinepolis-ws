@@ -110,3 +110,14 @@ Abrir un navegador web, y explorar el _website_ localmente http://localhost/admi
 Si todo salió bien, debería ver el formulario para iniciar sesión con el usuario recién creado.
 
 Listo!
+
+
+## ToDos
+- que los campos sean solo lectura si el status es diferente a To Do
+- agregar created_by y updated_by 
+- refactorizar para usar services y no el codigo directamente en tasks
+- guardar el task_id para cancelar en caso se modifique la fecha de ejecucion, o se elimine la tarea programada
+- investigar sobre reintentos cuando haya error
+- celery monitor
+- usuario readonly para django-sql-explorer
+- investigar el numero de workers ideal
