@@ -1,4 +1,4 @@
-version: "3"
+version: '3'
 
 services:
   web:
@@ -15,7 +15,8 @@ services:
       - database
       - broker
     # command: bash -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
-    command: bash -c "python manage.py migrate && gunicorn config.wsgi -b 0.0.0.0:8000 --access-logfile -"
+    # command: bash -c "python manage.py migrate && gunicorn config.wsgi -b 0.0.0.0:8000 --access-logfile -"
+    command: gunicorn config.wsgi -b 0.0.0.0:8000 --access-logfile -
     expose:
       - 8000
     # volumes:
@@ -31,17 +32,41 @@ services:
 
   database:
     image: postgres:10
-    restart: always
+    # restart: always
     env_file: .env
     expose:
       - 5432
     # ports:
     #   - 5432:5432
     volumes:
-      - ~/.data:/var/lib/postgresql/data
+      - ~/.data/cinepolis:/var/lib/postgresql/data
 
   broker:
     image: redis:6.2
-    restart: always
+    # restart: always
     expose:
       - 6379
+
+  redash-database:
+    image: postgres:10
+    environment:
+      - POSTGRES_DB=redash
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    expose:
+      - 5432
+    volumes:
+      - ~/.data/redash:/var/lib/postgresql/data
+
+  redash-broker:
+    image: redis:6.2
+    expose:
+      - 6379
+
+  redash:
+    image: redash/redash:latest
+    ports:
+      - 5000:5000
+    env_file: .env
+    depends_on:
+      - redash-database
+      - redash-broker
