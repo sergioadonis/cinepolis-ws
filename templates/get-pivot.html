@@ -1,0 +1,21 @@
+{% extends "base.html" %} {% load static %} {% block content %}
+<h4>{{ pivot.title }}</h4>
+<p>{{ pivot.description }}</p>
+
+<input
+  type="hidden"
+  id="get_pivot_data_by_id_url"
+  value="{% url 'get_pivot_data_by_id' pivot.id %}"
+/>
+
+<div id="pivot-wrapper" class="container mt-5">
+  <div id="pivot"></div>
+</div>
+
+<div id="loading" class="container">
+  <p>Cargando...</p>
+</div>
+
+{% endblock %} {% block extra_js %}
+<script src="{% static 'index.js' %}"></script>
+{% endblock %}

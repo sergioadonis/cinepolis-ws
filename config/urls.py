@@ -15,12 +15,25 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from django.views.generic import TemplateView
-from pivots.views import get_pivots
+from pivots import views
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('explorer/', include('explorer.urls')),
-    path('', TemplateView.as_view(template_name='index.html')),
-    path('get-pivots/', get_pivots),
+    path(
+        'admin/',
+        admin.site.urls),
+    path(
+        'explorer/',
+        include('explorer.urls')),
+    path(
+        '',
+        views.get_active_pivots,
+        name='get_active_pivots'),
+    path(
+        'pivot/<int:id>/',
+        views.get_pivot_by_id,
+        name='get_pivot_by_id'),
+    path(
+        'pivot-data/<int:id>/',
+        views.get_pivot_data_by_id,
+        name='get_pivot_data_by_id'),
 ]

@@ -1,17 +1,29 @@
+from django.shortcuts import render, redirect
 from django.http import JsonResponse
 from django.db import connection
-from decouple import config
-from explorer.models import Query
+from django.urls import reverse
 
 from . import models
 
 
-def get_pivots(request):
+def get_active_pivots(request):
     pivots = models.Pivot.objects.filter(is_active=True).order_by('order')
-    data = []
-    for p in pivots:
-        query = p.query
+    return render(request, "index.html", {'pivots': pivots})
 
+
+def get_pivot_by_id(request, id):
+    pivot = models.Pivot.objects.get(id=id)
+    return render(request, "get-pivot.html", {'pivot': pivot})
+
+
+def get_pivot_data_by_id(request, id):
+    if (not request.is_ajax()):
+        return redirect(to=reverse('get_pivot_by_id', args=[id]))
+
+    p = models.Pivot.objects.get(id=id)
+    data = {}
+    query = p.query
+    if query:
         with connection.cursor() as cursor:
             cursor.execute(query.sql)
             "Return all rows from a cursor as a dict"
@@ -21,31 +33,13 @@ def get_pivots(request):
                 for row in cursor.fetchall()
             ]
 
-            data.append({
+            data = {
                 'id': p.id,
-                'title': str(p),
+                'title': p.title,
                 'description': query.description,
                 'query_result': query_result,
                 'query_id': query.id,
                 'options': p.options
-            })
-
-    # query_id = config('QUERY_ID', cast=int, default=1)
-    # query = Query.objects.get(id=query_id)
-    # sql = query.sql
-
-    # with connection.cursor() as cursor:
-    #     cursor.execute(sql)
-    #     "Return all rows from a cursor as a dict"
-    #     columns = [col[0] for col in cursor.description]
-    #     query_result = [
-    #         dict(zip(columns, row))
-    #         for row in cursor.fetchall()
-    #     ]
-
-    #     data = {
-    #         'query_result': query_result,
-    #         'title': query.title
-    #     }
+            }
 
     return JsonResponse(data=data, safe=False)
