@@ -121,3 +121,4 @@ Listo!
 - celery monitor
 - usuario readonly para django-sql-explorer
 - investigar el numero de workers ideal
+- agregar soporte para https con LetsEncrypt
